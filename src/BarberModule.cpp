@@ -140,7 +140,7 @@ namespace cmangos_module
 
                 // store values to restore if player choose to cancel
                 skincolor     = player->GetByteValue(PLAYER_BYTES, 0); // Added
-                face          = player->GetByteValue(PLAYER_BYTES, 1); // Added Face Tracking
+                face          = player->GetByteValue(PLAYER_BYTES, 1); // Added
                 hairstyle     = player->GetByteValue(PLAYER_BYTES, 2);
                 haircolor     = player->GetByteValue(PLAYER_BYTES, 3);
                 facialfeature = player->GetByteValue(PLAYER_BYTES_2, 0);
@@ -336,7 +336,7 @@ namespace cmangos_module
                     player->SEND_GOSSIP_MENU(50024, creature->GetObjectGuid());
                     break;
 
-                    // skin color (Added entire block below)
+                    // skin color
                     // next - increase skin color
                 case GOSSIP_ACTION_INFO_DEF + 9:
                     if (!player->HasFlag(PLAYER_FLAGS, PLAYER_FLAGS_HIDE_HELM))
@@ -347,7 +347,7 @@ namespace cmangos_module
 
                     if (sender == GOSSIP_SENDER_SUBOPTION)
                         SelectSkinColor(player, creature, 1);
-                    // previous - decrease skin color
+                    // previous - decrease it
                 case GOSSIP_ACTION_INFO_DEF + 10:
                     if (action == GOSSIP_ACTION_INFO_DEF + 10 && sender == GOSSIP_SENDER_SUBOPTION)
                         SelectSkinColor(player, creature, -1);
@@ -358,7 +358,8 @@ namespace cmangos_module
                     player->SEND_GOSSIP_MENU(50024, creature->GetObjectGuid());
                     break;
 
-                    // face selection (Added Action 11 & 12 blocks)
+                    // face selection
+                    // next - increase face style
                 case GOSSIP_ACTION_INFO_DEF + 11:
                     if (!player->HasFlag(PLAYER_FLAGS, PLAYER_FLAGS_HIDE_HELM))
                     {
@@ -368,9 +369,11 @@ namespace cmangos_module
 
                     if (sender == GOSSIP_SENDER_SUBOPTION)
                         SelectFace(player, creature, 1);
+                    // previous - decrease it
                 case GOSSIP_ACTION_INFO_DEF + 12:
                     if (action == GOSSIP_ACTION_INFO_DEF + 12 && sender == GOSSIP_SENDER_SUBOPTION)
                         SelectFace(player, creature, -1);
+                    // choose options again
                     player->ADD_GOSSIP_ITEM(0, GetGossipText(player, GOSSIP_BARBER_NEXT).c_str(), GOSSIP_SENDER_SUBOPTION, GOSSIP_ACTION_INFO_DEF + 11);
                     player->ADD_GOSSIP_ITEM(0, GetGossipText(player, GOSSIP_BARBER_PREV).c_str(), GOSSIP_SENDER_SUBOPTION, GOSSIP_ACTION_INFO_DEF + 12);
                     player->ADD_GOSSIP_ITEM(0, GetGossipText(player, GOSSIP_BARBER_CHOOSE).c_str(), GOSSIP_SENDER_SUBOPTION, GOSSIP_ACTION_INFO_DEF + 1);
@@ -461,7 +464,7 @@ namespace cmangos_module
 #endif
     };
 
-    // Added array
+    // Added Skin Color Limits
     uint8 maxSkinColor[MAX_RACES] =
     {
         0,  //                        0
@@ -480,7 +483,7 @@ namespace cmangos_module
 #endif
     };
 
-    // Added Face Limits (Standard Vanilla/TBC client limits per race, customizable)
+    // Added Face Limits
     maxStyles_t maxFaces[MAX_RACES] =
     {
         {0,0},
@@ -506,7 +509,7 @@ namespace cmangos_module
         player->DeMorph();
     }
 
-    // Added whole method below
+    // Added Skin Color Selector Mechanics using PLAYER_BYTES index 0
     void BarberModule::SelectSkinColor(Player* player, Creature* creature, int change)
     {
         uint8 max = maxSkinColor[player->getRace()];
