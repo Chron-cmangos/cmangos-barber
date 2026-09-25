@@ -33,6 +33,8 @@ namespace cmangos_module
         GOSSIP_BARBER_HAIR = 50420,
         GOSSIP_BARBER_TUSKS = 50421,
         GOSSIP_BARBER_TENTACLES = 50422,
+        GOSSIP_BARBER_SKIN_COLOR = 50424, // Added this line to fix the error
+        GOSSIP_BARBER_FACE_OPTION = 50425, // Added text id for Face Change
         GOSSIP_SENDER_OPTION = 50,
         GOSSIP_SENDER_SUBOPTION = 51,
     };
@@ -60,6 +62,8 @@ namespace cmangos_module
 
     private:
         // Barber
+        void SelectSkinColor(Player* player, Creature* creature, int change); // Added
+        void SelectFace(Player* player, Creature* creature, int change); // Added Face Selection Method
         void SelectFacialFeature(Player* player, Creature* creature, int change);
         void SelectHairColor(Player* player, Creature* creature, int change);
         void SelectHairStyle(Player* player, Creature* creature, int change);
@@ -67,6 +71,8 @@ namespace cmangos_module
         std::string GetGossipText(Player* player, uint32 textId);
 
     private:
+        uint32 skincolor; // Added
+        uint32 face; // Added tracking variable
         uint32 hairstyle;
         uint32 haircolor;
         uint32 facialfeature;

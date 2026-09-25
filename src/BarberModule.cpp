@@ -139,8 +139,10 @@ namespace cmangos_module
                     return true;
 
                 // store values to restore if player choose to cancel
-                hairstyle = player->GetByteValue(PLAYER_BYTES, 2);
-                haircolor = player->GetByteValue(PLAYER_BYTES, 3);
+                skincolor     = player->GetByteValue(PLAYER_BYTES, 0); // Added
+                face          = player->GetByteValue(PLAYER_BYTES, 1); // Added Face Tracking
+                hairstyle     = player->GetByteValue(PLAYER_BYTES, 2);
+                haircolor     = player->GetByteValue(PLAYER_BYTES, 3);
                 facialfeature = player->GetByteValue(PLAYER_BYTES_2, 0);
                 if (sitting)
                 {
@@ -177,6 +179,8 @@ namespace cmangos_module
                 uint32 text1 = GOSSIP_BARBER_HAIR_STYLE;
                 uint32 text2 = GOSSIP_BARBER_HAIR_COLOR;
                 uint32 text3 = GOSSIP_BARBER_FACIAL_HAIR;
+                uint32 text4 = GOSSIP_BARBER_SKIN_COLOR; // Added
+                uint32 text5 = GOSSIP_BARBER_FACE_OPTION; // Added
 
                 if (player->getRace() == RACE_TAUREN)
                     text1 = GOSSIP_BARBER_HORNS;
@@ -256,6 +260,8 @@ namespace cmangos_module
                     player->ADD_GOSSIP_ITEM(0, GetGossipText(player, text1).c_str(), GOSSIP_SENDER_OPTION, GOSSIP_ACTION_INFO_DEF + 2);
                     player->ADD_GOSSIP_ITEM(0, GetGossipText(player, text2).c_str(), GOSSIP_SENDER_OPTION, GOSSIP_ACTION_INFO_DEF + 4);
                     player->ADD_GOSSIP_ITEM(0, GetGossipText(player, text3).c_str(), GOSSIP_SENDER_OPTION, GOSSIP_ACTION_INFO_DEF + 6);
+                    player->ADD_GOSSIP_ITEM(0, GetGossipText(player, text4).c_str(), GOSSIP_SENDER_OPTION, GOSSIP_ACTION_INFO_DEF + 9); // Added
+                    player->ADD_GOSSIP_ITEM(0, GetGossipText(player, text5).c_str(), GOSSIP_SENDER_OPTION, GOSSIP_ACTION_INFO_DEF + 11); // Added Face Category
                     player->SEND_GOSSIP_MENU(50023, creature->GetObjectGuid());
                     break;
                     // hair style
@@ -330,7 +336,48 @@ namespace cmangos_module
                     player->SEND_GOSSIP_MENU(50024, creature->GetObjectGuid());
                     break;
 
-                    // cannot affort
+                    // skin color (Added entire block below)
+                    // next - increase skin color
+                case GOSSIP_ACTION_INFO_DEF + 9:
+                    if (!player->HasFlag(PLAYER_FLAGS, PLAYER_FLAGS_HIDE_HELM))
+                    {
+                        helmetShown = true;
+                        player->ToggleFlag(PLAYER_FLAGS, PLAYER_FLAGS_HIDE_HELM);
+                    }
+
+                    if (sender == GOSSIP_SENDER_SUBOPTION)
+                        SelectSkinColor(player, creature, 1);
+                    // previous - decrease skin color
+                case GOSSIP_ACTION_INFO_DEF + 10:
+                    if (action == GOSSIP_ACTION_INFO_DEF + 10 && sender == GOSSIP_SENDER_SUBOPTION)
+                        SelectSkinColor(player, creature, -1);
+                    // choose options again
+                    player->ADD_GOSSIP_ITEM(0, GetGossipText(player, GOSSIP_BARBER_NEXT).c_str(), GOSSIP_SENDER_SUBOPTION, GOSSIP_ACTION_INFO_DEF + 9);
+                    player->ADD_GOSSIP_ITEM(0, GetGossipText(player, GOSSIP_BARBER_PREV).c_str(), GOSSIP_SENDER_SUBOPTION, GOSSIP_ACTION_INFO_DEF + 10);
+                    player->ADD_GOSSIP_ITEM(0, GetGossipText(player, GOSSIP_BARBER_CHOOSE).c_str(), GOSSIP_SENDER_SUBOPTION, GOSSIP_ACTION_INFO_DEF + 1);
+                    player->SEND_GOSSIP_MENU(50024, creature->GetObjectGuid());
+                    break;
+
+                    // face selection (Added Action 11 & 12 blocks)
+                case GOSSIP_ACTION_INFO_DEF + 11:
+                    if (!player->HasFlag(PLAYER_FLAGS, PLAYER_FLAGS_HIDE_HELM))
+                    {
+                        helmetShown = true;
+                        player->ToggleFlag(PLAYER_FLAGS, PLAYER_FLAGS_HIDE_HELM);
+                    }
+
+                    if (sender == GOSSIP_SENDER_SUBOPTION)
+                        SelectFace(player, creature, 1);
+                case GOSSIP_ACTION_INFO_DEF + 12:
+                    if (action == GOSSIP_ACTION_INFO_DEF + 12 && sender == GOSSIP_SENDER_SUBOPTION)
+                        SelectFace(player, creature, -1);
+                    player->ADD_GOSSIP_ITEM(0, GetGossipText(player, GOSSIP_BARBER_NEXT).c_str(), GOSSIP_SENDER_SUBOPTION, GOSSIP_ACTION_INFO_DEF + 11);
+                    player->ADD_GOSSIP_ITEM(0, GetGossipText(player, GOSSIP_BARBER_PREV).c_str(), GOSSIP_SENDER_SUBOPTION, GOSSIP_ACTION_INFO_DEF + 12);
+                    player->ADD_GOSSIP_ITEM(0, GetGossipText(player, GOSSIP_BARBER_CHOOSE).c_str(), GOSSIP_SENDER_SUBOPTION, GOSSIP_ACTION_INFO_DEF + 1);
+                    player->SEND_GOSSIP_MENU(50024, creature->GetObjectGuid());
+                    break;
+
+                    // cannot afford
                 case GOSSIP_ACTION_INFO_DEF + 8:
                     player->GetPlayerMenu()->CloseGossip();
                     break;
@@ -414,11 +461,92 @@ namespace cmangos_module
 #endif
     };
 
+    // Added array
+    uint8 maxSkinColor[MAX_RACES] =
+    {
+        0,  //                        0
+        9,  // RACE_HUMAN           = 1,
+        8,  //  RACE_ORC            = 2,
+        8,  // RACE_DWARF           = 3,
+        8,  // RACE_NIGHTELF        = 4,
+        5,  // RACE_UNDEAD_PLAYER   = 5,
+        18, //  RACE_TAUREN         = 6,
+        4,  // RACE_GNOME           = 7,
+        5,  // RACE_TROLL           = 8,
+#if EXPANSION > 0
+        0,  // RACE_GOBLIN          = 9,
+        9,  //  RACE_BLOODELF       = 10,
+        13, //  RACE_DRAENEI        = 11
+#endif
+    };
+
+    // Added Face Limits (Standard Vanilla/TBC client limits per race, customizable)
+    maxStyles_t maxFaces[MAX_RACES] =
+    {
+        {0,0},
+        {11,14},// RACE_HUMAN
+        {8,8},  // RACE_ORC
+        {8,9},  // RACE_DWARF
+        {8,8},  // RACE_NIGHTELF
+        {9,7},  // RACE_UNDEAD_PLAYER
+        {4,4},  // RACE_TAUREN
+        {6,6},  // RACE_GNOME
+        {4,5},  // RACE_TROLL
+#if EXPANSION > 0
+        {0,0},  // RACE_GOBLIN
+        {9,9},  // RACE_BLOODELF
+        {6,6},  // RACE_DRAENEI
+#endif
+    };
+
     void BarberModule::ChangeEffect(Player* player)
     {
         player->SetDisplayId(10045);
         player->SendForcedObjectUpdate();
         player->DeMorph();
+    }
+
+    // Added whole method below
+    void BarberModule::SelectSkinColor(Player* player, Creature* creature, int change)
+    {
+        uint8 max = maxSkinColor[player->getRace()];
+        int current = player->GetByteValue(PLAYER_BYTES, 0);
+
+        current += change;
+
+        if (current > max)
+            current = 0;
+        else if (current < 0)
+            current = max;
+
+        creature->PlaySpellVisual(425);
+        player->PlaySpellVisual(304);
+
+        player->SetByteValue(PLAYER_BYTES, 0, current);
+        ChangeEffect(player);
+    }
+
+    // Added Complete Face Selector Mechanics using PLAYER_BYTES index 1
+    void BarberModule::SelectFace(Player* player, Creature* creature, int change)
+    {
+        uint8 max = maxFaces[player->getRace()].maxMale;
+        if (player->getGender() == GENDER_FEMALE)
+            max = maxFaces[player->getRace()].maxFemale;
+
+        int current = player->GetByteValue(PLAYER_BYTES, 1);
+
+        current += change;
+
+        if (current > max)
+            current = 0;
+        else if (current < 0)
+            current = max;
+
+        creature->PlaySpellVisual(425);
+        player->PlaySpellVisual(304);
+
+        player->SetByteValue(PLAYER_BYTES, 1, current);
+        ChangeEffect(player);
     }
 
     void BarberModule::SelectHairStyle(Player* player, Creature* creature, int change)
@@ -492,8 +620,11 @@ namespace cmangos_module
         int loc_idx = player->GetSession()->GetSessionDbLocaleIndex();
         std::string Text_0[MAX_GOSSIP_TEXT_OPTIONS], Text_1[MAX_GOSSIP_TEXT_OPTIONS];
         GossipText const* gossip = sObjectMgr.GetGossipText(textId);
-        Text_0[0] = gossip->Options[0].Text_0;
+        
+        // Fix: Use index accessor [0] to safely copy string elements instead of matching whole arrays
+        Text_0[0] = gossip->Options[0].Text_0; 
         Text_1[0] = gossip->Options[0].Text_1;
+
         sObjectMgr.GetNpcTextLocaleStringsAll(textId, loc_idx, &Text_0, &Text_1);
         return Text_0[0];
     }
