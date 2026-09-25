@@ -14,6 +14,6 @@ Classic and TBC
 5. Lastly you will have to install the database changes located in the `src/modules/dualspec/sql/install` folder, each folder inside represents where you should execute the queries. E.g. The queries inside of `src/modules/barber/sql/install/world` will need to be executed in the world/mangosd database.
 
 # How to uninstall
-To remove the dual spec from your server you have multiple options, the first and easiest is to disable it from the `dualspec.conf` file. The second option is to completely remove it from the server and db:
-1. Remove the `BUILD_MODULE_DUALSPEC` flag from your cmake configuration and recompile the game
-2. Execute the sql queries located in the `src/modules/dualspec/sql/uninstall` folder. Each folder inside represents where you should execute the queries. E.g. The queries inside of `src/modules/dualspec/sql/uninstall/world` will need to be executed in the world/mangosd database, the ones in `src/modules/dualspec/sql/uninstall/characters` in the characters database, etc...
+To remove the dual spec from your server you have multiple options, the first and easiest is to disable it from the `barber.conf` file. The second option is to completely remove it from the server and db:
+1. Remove the `BUILD_MODULE_BARBER` flag from your cmake configuration and recompile the game
+2. Execute the sql queries located in the `src/modules/barber/sql/uninstall` folder. Each folder inside represents where you should execute the queries. E.g. The queries inside of `src/modules/barber/sql/uninstall/world` will need to be executed in the world/mangosd database.
